@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive 3-Body Simulator</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body id="top">
+    <div class="container">
+      <header class="main-header">
+        <h1>Bruce Almighty: Playing with Orbits</h1>
+      </header>
+
+      <section class="intro">
+        <p class="description">
+          Hi Bruce. Your task is to create some 3-Body systems. The milky way
+          feels a little empty (only about 300 billion planets). Configure your
+          own 3-body system and watch it orbit! Adjust masses, initial
+          positions, velocities, and choose different numerical integration
+          methods to see how they affect the dynamics.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Simulation Parameters</h2>
+
+        <div class="simulation-container">
+          <div class="preset-section">
+            <h3>Quick Start with Presets</h3>
+            <p class="note">
+              <strong>Note:</strong> N-body problems are extremely delicate.
+              Punching in random numbers will 9 times out of 10 produce complete
+              chaos. If you want to explore more interesting orbits, I suggest
+              looking at
+              <a href="http://three-body.ipb.ac.rs/" target="_blank"
+                >this website</a
+              >. Just set the masses to <code>1</code>, the initial positions to
+              <code>[[-1.0, 0.0], [1.0, 0.0], [0.0, 0.0]]</code>,
+              <code>T</code> to the period, <code>dt</code> to
+              <code>0.0001</code>, and <code>G</code> to <code>1</code>.
+            </p>
+            <div class="preset-buttons">
+              <button class="preset-btn" onclick="loadPreset('goggles', this)">
+                GOGGLES
+              </button>
+              <button class="preset-btn" onclick="loadPreset('moth1', this)">
+                MOTH I
+              </button>
+              <button
+                class="preset-btn"
+                onclick="loadPreset('dragonfly', this)"
+              >
+                Dragonfly
+              </button>
+            </div>
+          </div>
+
+          <form id="simulationForm">
+            <div class="parameter-grid">
+              <div class="param-group">
+                <h3>Simulation Settings</h3>
+                <div class="input-row">
+                  <label for="method">Integration Method:</label>
+                  <select id="method" name="method">
+                    <option value="velocity_verlet">
+                      Velocity Verlet (Recommended)
+                    </option>
+                    <option value="rk2">Runge-Kutta 2</option>
+                    <option value="forward_euler">Forward Euler</option>
+                  </select>
+                </div>
+                <div class="input-row">
+                  <label for="T">Total Time:</label>
+                  <input
+                    type="number"
+                    id="T"
+                    name="T"
+                    value="50"
+                    min="1"
+                    max="1000"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="dt">Time Step (dt):</label>
+                  <input
+                    type="number"
+                    id="dt"
+                    name="dt"
+                    value="0.01"
+                    min="0.0001"
+                    max="1"
+                    step="0.0001"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="G">Gravitational Constant (G):</label>
+                  <input
+                    type="number"
+                    id="G"
+                    name="G"
+                    value="1.0"
+                    min="0.1"
+                    max="10"
+                    step="0.1"
+                  />
+                </div>
+              </div>
+
+              <!-- Body 1 Parameters -->
+              <div class="param-group">
+                <h3>Body 1 (Blue)</h3>
+                <div class="input-row">
+                  <label for="m1">Mass:</label>
+                  <input
+                    type="number"
+                    id="m1"
+                    name="m1"
+                    value="1.0"
+                    min="0.1"
+                    max="10"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="r1x">Initial X Position:</label>
+                  <input
+                    type="number"
+                    id="r1x"
+                    name="r1x"
+                    value="-1.0"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="r1y">Initial Y Position:</label>
+                  <input
+                    type="number"
+                    id="r1y"
+                    name="r1y"
+                    value="0.0"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="v1x">Initial X Velocity:</label>
+                  <input
+                    type="number"
+                    id="v1x"
+                    name="v1x"
+                    value="0.347111"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="v1y">Initial Y Velocity:</label>
+                  <input
+                    type="number"
+                    id="v1y"
+                    name="v1y"
+                    value="0.532728"
+                    step="any"
+                  />
+                </div>
+              </div>
+
+              <!-- Body 2 Parameters -->
+              <div class="param-group">
+                <h3>Body 2 (Red)</h3>
+                <div class="input-row">
+                  <label for="m2">Mass:</label>
+                  <input
+                    type="number"
+                    id="m2"
+                    name="m2"
+                    value="1.0"
+                    min="0.1"
+                    max="10"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="r2x">Initial X Position:</label>
+                  <input
+                    type="number"
+                    id="r2x"
+                    name="r2x"
+                    value="1.0"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="r2y">Initial Y Position:</label>
+                  <input
+                    type="number"
+                    id="r2y"
+                    name="r2y"
+                    value="0.0"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="v2x">Initial X Velocity:</label>
+                  <input
+                    type="number"
+                    id="v2x"
+                    name="v2x"
+                    value="0.347111"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="v2y">Initial Y Velocity:</label>
+                  <input
+                    type="number"
+                    id="v2y"
+                    name="v2y"
+                    value="0.532728"
+                    step="any"
+                  />
+                </div>
+              </div>
+
+              <!-- Body 3 Parameters -->
+              <div class="param-group">
+                <h3>Body 3 (Green)</h3>
+                <div class="input-row">
+                  <label for="m3">Mass:</label>
+                  <input
+                    type="number"
+                    id="m3"
+                    name="m3"
+                    value="1.0"
+                    min="0.1"
+                    max="10"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="r3x">Initial X Position:</label>
+                  <input
+                    type="number"
+                    id="r3x"
+                    name="r3x"
+                    value="0.0"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="r3y">Initial Y Position:</label>
+                  <input
+                    type="number"
+                    id="r3y"
+                    name="r3y"
+                    value="0.0"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="v3x">Initial X Velocity:</label>
+                  <input
+                    type="number"
+                    id="v3x"
+                    name="v3x"
+                    value="-0.694222"
+                    step="any"
+                  />
+                </div>
+                <div class="input-row">
+                  <label for="v3y">Initial Y Velocity:</label>
+                  <input
+                    type="number"
+                    id="v3y"
+                    name="v3y"
+                    value="-1.065456"
+                    step="any"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="button-container">
+              <button type="submit" class="run-simulation-btn">
+                🔬 Run Simulation
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Loading and Results Section -->
+      <section id="loading" class="content-section" style="display: none">
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+          <h3>Running Simulation...</h3>
+          <p>Computing orbital trajectories and conservation laws...</p>
+        </div>
+      </section>
+
+      <section id="results" class="content-section" style="display: none">
+        <h2>Simulation Results</h2>
+
+        <div id="result-plot" class="plot-container"></div>
+
+        <div id="statistics" class="statistics-container">
+          <h3>Conservation Statistics</h3>
+          <div class="stats-grid"></div>
+        </div>
+
+        <div class="analysis-tips">
+          <h3>💡 Analysis Tips</h3>
+          <ul>
+            <li>
+              <strong>Energy Drift:</strong> Lower values indicate better
+              conservation. Symplectic methods (Velocity Verlet) typically
+              perform better.
+            </li>
+            <li>
+              <strong>Angular Momentum:</strong> Should remain constant in
+              isolated systems. Large drifts suggest numerical errors.
+            </li>
+            <li>
+              <strong>Orbital Stability:</strong> Stable orbits repeat their
+              patterns, while chaotic systems show irregular behavior.
+            </li>
+            <li>
+              <strong>Time Step:</strong> Smaller dt generally improves accuracy
+              but increases computation time.
+            </li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // ✅ Fixed: pass "btn" into the function
+      async function loadPreset(presetName, btn) {
+        try {
+          const response = await fetch(`/preset/${presetName}`);
+          const data = await response.json();
+
+          if (data.error) {
+            alert("Error loading preset: " + data.error);
+            return;
+          }
+
+          // Fill form with preset values
+          Object.keys(data).forEach((key) => {
+            const input = document.getElementById(key);
+            if (input) {
+              input.value = data[key];
+            }
+          });
+
+          // Visual feedback (highlight active button)
+          document
+            .querySelectorAll(".preset-btn")
+            .forEach((b) => b.classList.remove("active"));
+          if (btn) btn.classList.add("active");
+        } catch (error) {
+          console.error("Error loading preset:", error);
+          alert("Failed to load preset");
+        }
+      }
+
+      // Handle form submission (unchanged)
+      document
+        .getElementById("simulationForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          document.getElementById("loading").style.display = "block";
+          document.getElementById("results").style.display = "none";
+          document
+            .getElementById("loading")
+            .scrollIntoView({ behavior: "smooth" });
+
+          const formData = new FormData(this);
+          const data = {};
+          formData.forEach((value, key) => {
+            data[key] = value;
+          });
+
+          try {
+            const response = await fetch("/run_simulation", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (result.error) {
+              alert("Simulation error: " + result.error);
+              document.getElementById("loading").style.display = "none";
+              return;
+            }
+
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("results").style.display = "block";
+
+            document.getElementById(
+              "result-plot"
+            ).innerHTML = `<img src="${result.plot_url}" alt="Simulation Results" style="max-width: 100%; height: auto;">`;
+
+            const statsContainer = document.querySelector(".stats-grid");
+            const stats = result.statistics;
+            statsContainer.innerHTML = `
+                    <div class="stat-item"><div class="stat-label">Initial Energy</div><div class="stat-value">${stats.initial_energy.toFixed(
+                      6
+                    )}</div></div>
+                    <div class="stat-item"><div class="stat-label">Final Energy</div><div class="stat-value">${stats.final_energy.toFixed(
+                      6
+                    )}</div></div>
+                    <div class="stat-item ${
+                      stats.energy_drift_percent > 1 ? "stat-warning" : ""
+                    }"><div class="stat-label">Energy Drift</div><div class="stat-value">${stats.energy_drift_percent.toFixed(
+              3
+            )}%</div></div>
+                    <div class="stat-item"><div class="stat-label">Initial Angular Momentum</div><div class="stat-value">${stats.initial_momentum.toFixed(
+                      6
+                    )}</div></div>
+                    <div class="stat-item"><div class="stat-label">Final Angular Momentum</div><div class="stat-value">${stats.final_momentum.toFixed(
+                      6
+                    )}</div></div>
+                    <div class="stat-item ${
+                      stats.momentum_drift_percent > 1 ? "stat-warning" : ""
+                    }"><div class="stat-label">Angular Momentum Drift</div><div class="stat-value">${stats.momentum_drift_percent.toFixed(
+              3
+            )}%</div></div>
+                    <div class="stat-item"><div class="stat-label">Total Steps</div><div class="stat-value">${
+                      stats.total_steps
+                    }</div></div>
+                    <div class="stat-item"><div class="stat-label">Time Step</div><div class="stat-value">${
+                      stats.time_step
+                    }</div></div>
+                `;
+
+            document
+              .getElementById("results")
+              .scrollIntoView({ behavior: "smooth" });
+          } catch (error) {
+            console.error("Error:", error);
+            alert("Failed to run simulation");
+            document.getElementById("loading").style.display = "none";
+          }
+        });
+
+      // Input validation
+      document.querySelectorAll('input[type="number"]').forEach((input) => {
+        input.addEventListener("input", function () {
+          const value = parseFloat(this.value);
+          const min = parseFloat(this.min);
+          const max = parseFloat(this.max);
+
+          if (!isNaN(min) && value < min) {
+            this.style.borderColor = "#ff4444";
+          } else if (!isNaN(max) && value > max) {
+            this.style.borderColor = "#ff4444";
+          } else {
+            this.style.borderColor = "";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
